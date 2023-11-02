@@ -1,4 +1,5 @@
 import express from 'express';
+import { join as joinPath } from 'path';
 
 const app = express();
 const serverPort = 3000;
