@@ -1,7 +1,6 @@
 {
   "compileOnSave": true,
   "compilerOptions": {
-    "lib": ["es2023"],
     "module": "node16",
     "target": "es2022",
     "strict": true,
@@ -11,7 +10,8 @@
     "moduleResolution": "node16",
     "rootDir": "./src",
     "outDir": "./dist",
-    "sourceMap": true
+    "sourceMap": true,
+    "noImplicitAny": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules/*"]
