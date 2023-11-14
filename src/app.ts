@@ -2,6 +2,7 @@ import express from 'express';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { connectDb } from './db/connect.js';
+import { router as tourRouter } from './routes/tourRoute.js';
 
 dotenv.config();
 const app = express();
@@ -9,6 +10,10 @@ const app = express();
 process.env.MODE && app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.static('public'));
+
+// * routes
+const apiBaseRoute = '/api/v1';
+app.use(`${apiBaseRoute}/tour`, tourRouter);
 
 const serverPort = process.env.PORT;
 const startServer = async () => {
