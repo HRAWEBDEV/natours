@@ -1,9 +1,43 @@
 import { Request, Response, NextFunction } from 'express';
 import { Tour } from '../models/tourModel.js';
 
-const getAllTours = async (req: Request, res: Response) => {};
-const saveTour = async (req: Request, res: Response) => {};
-const deleteTour = async (req: Request, res: Response) => {};
-const updateTour = async (req: Request, res: Response) => {};
+const getAllTours = async (req: Request, res: Response) => {
+  const tours = await Tour.find();
+  res
+    .status(200)
+    .json({ status: 'success', result: tours.length, data: tours });
+};
 
-export { getAllTours, saveTour, deleteTour, updateTour };
+const getById = async (req: Request, res: Response) => {
+  const id = req.params.id;
+  const tour = await Tour.findById(id);
+  res.status(200).json({ status: 'success', data: tour });
+};
+
+const saveTour = async (req: Request, res: Response) => {
+  try {
+    const tour = await Tour.create(req.body);
+    res.status(200).json({ status: 'success', data: tour });
+  } catch (err) {
+    res.status(404).json({ status: 'failed', error: err });
+  }
+};
+
+const deleteTour = async (req: Request, res: Response) => {
+  const id = req.params.id;
+  try {
+    const tour = await Tour.findByIdAndDelete(id);
+    res.status(200).json({ status: 'success', data: tour });
+  } catch (err) {}
+};
+
+const updateTour = async (req: Request, res: Response) => {
+  const id = req.params.id;
+  const newTour = req.body;
+  try {
+    const tour = await Tour.findByIdAndUpdate(id, newTour);
+    res.status(301).json({ status: 'success', data: tour });
+  } catch (err) {}
+};
+
+export { getAllTours, saveTour, deleteTour, updateTour, getById };
