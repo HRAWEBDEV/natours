@@ -1,23 +1,23 @@
 import express from 'express';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
-import { connectDB } from './db/connect.js';
+import { connectDb } from './db/connect.js';
 dotenv.config();
 const app = express();
-// * config global middlewares
-process.env.NODE_ENV !== 'production' && app.use(morgan('dev'));
+// add default middlewares
+process.env.MODE && app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.static('public'));
-// * starting server
-const port = process.env.PORT || 3000;
+const serverPort = process.env.PORT;
 const startServer = async () => {
     try {
-        await connectDB();
-        app.listen(port);
-        console.log(`server is listening to port:${port}`);
+        await connectDb();
+        app.listen(serverPort, () => {
+            console.log(`server is listening to port: ${serverPort}`);
+        });
     }
     catch (err) {
-        console.log('server start failed', err);
+        console.log(`server failed to start:${err}`);
     }
 };
 startServer();

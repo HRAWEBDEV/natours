@@ -1,8 +1,8 @@
 import { connect } from 'mongoose';
-const connectDB = () => {
+const connectDb = () => {
     return connect(process.env.DB_URI, {
         dbName: 'natours',
     });
 };
-export { connectDB };
+export { connectDb };
 //# sourceMappingURL=connect.js.map
