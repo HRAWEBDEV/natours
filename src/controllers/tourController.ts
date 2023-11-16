@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import { Tour } from '../models/tourModel.js';
 
 const getAllTours = async (req: Request, res: Response) => {
@@ -16,7 +16,7 @@ const getById = async (req: Request, res: Response) => {
 
 const saveTour = async (req: Request, res: Response) => {
   try {
-    const tour = await Tour.create(req.body);
+    const tour = await Tour.create({ ...req.body, date: new Date() });
     res.status(200).json({ status: 'success', data: tour });
   } catch (err) {
     res.status(404).json({ status: 'failed', error: err });
@@ -35,7 +35,10 @@ const updateTour = async (req: Request, res: Response) => {
   const id = req.params.id;
   const newTour = req.body;
   try {
-    const tour = await Tour.findByIdAndUpdate(id, newTour);
+    const tour = await Tour.findByIdAndUpdate(id, newTour, {
+      new: true,
+      runValidators: true,
+    });
     res.status(301).json({ status: 'success', data: tour });
   } catch (err) {}
 };

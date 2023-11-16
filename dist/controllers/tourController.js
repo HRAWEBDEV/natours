@@ -12,7 +12,7 @@ const getById = async (req, res) => {
 };
 const saveTour = async (req, res) => {
     try {
-        const tour = await Tour.create(req.body);
+        const tour = await Tour.create({ ...req.body, date: new Date() });
         res.status(200).json({ status: 'success', data: tour });
     }
     catch (err) {
@@ -31,7 +31,10 @@ const updateTour = async (req, res) => {
     const id = req.params.id;
     const newTour = req.body;
     try {
-        const tour = await Tour.findByIdAndUpdate(id, newTour);
+        const tour = await Tour.findByIdAndUpdate(id, newTour, {
+            new: true,
+            runValidators: true,
+        });
         res.status(301).json({ status: 'success', data: tour });
     }
     catch (err) { }
