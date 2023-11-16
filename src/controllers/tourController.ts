@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import { Tour } from '../models/tourModel.js';
+import * as core from 'express-serve-static-core';
+import { Tour, type TTour } from '../models/tourModel.js';
 
 const getAllTours = async (req: Request, res: Response) => {
   const tours = await Tour.find();
@@ -14,7 +15,10 @@ const getById = async (req: Request, res: Response) => {
   res.status(200).json({ status: 'success', data: tour });
 };
 
-const saveTour = async (req: Request, res: Response) => {
+const saveTour = async (
+  req: Request<core.ParamsDictionary, any, TTour>,
+  res: Response,
+) => {
   try {
     const tour = await Tour.create({ ...req.body, date: new Date() });
     res.status(200).json({ status: 'success', data: tour });

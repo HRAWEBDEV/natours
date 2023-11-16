@@ -5,14 +5,34 @@ import { connectDb } from './connect.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const toursFilePath = join(process.cwd(), 'dev-data', 'data', 'tours.json');
-const tours = JSON.parse(readFileSync(toursFilePath, 'utf-8'));
-
 const insertData = async () => {
-  await connectDb();
-  // Tour.deleteMany();
-  await Tour.insertMany(tours);
+  const toursFilePath = join(process.cwd(), 'dev-data', 'data', 'tours.json');
+  const tours = JSON.parse(readFileSync(toursFilePath, 'utf-8'));
+  try {
+    await connectDb();
+    // Tour.deleteMany();
+    await Tour.insertMany(tours);
+    console.log('data inserted successfully');
+  } catch (err) {
+    console.log(err);
+  }
   process.exit(0);
 };
 
-insertData();
+const deleteData = async () => {
+  try {
+    await connectDb();
+    // Tour.deleteMany();
+    await Tour.deleteMany();
+    console.log('data deleted successfully');
+  } catch (err) {
+    console.log(err);
+  }
+  process.exit(0);
+};
+
+if (process.argv[2] === '--import') {
+  insertData();
+} else if (process.argv[2] === '--delete') {
+  deleteData();
+}
