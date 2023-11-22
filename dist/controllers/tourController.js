@@ -1,7 +1,13 @@
 import { Tour } from '../models/tourModel.js';
 const getAllTours = async (req, res) => {
-    const { page, sort, ...otherQueries } = req.query;
-    const tours = await Tour.find(otherQueries);
+    const { page, sort, select, ...otherQueries } = req.query;
+    let toursQuery = Tour.find(otherQueries);
+    // * sorting
+    toursQuery.sort(sort && typeof sort == 'string' ? sort.replaceAll(',', ' ') : 'createdAt');
+    // * selecting
+    toursQuery.select(select && typeof select == 'string' ? select.replaceAll(',', ' ') : '-__v');
+    // * getting data
+    const tours = await toursQuery;
     res
         .status(200)
         .json({ status: 'success', result: tours.length, data: tours });

@@ -1,10 +1,20 @@
 import { Request, Response } from 'express';
-import * as core from 'express-serve-static-core';
+import { ParamsDictionary } from 'express-serve-static-core';
 import { Tour, type TTour } from '../models/tourModel.js';
 
 const getAllTours = async (req: Request, res: Response) => {
-  const { page, sort, ...otherQueries } = req.query;
-  const tours = await Tour.find(otherQueries);
+  const { page, sort, select, ...otherQueries } = req.query;
+  let toursQuery = Tour.find(otherQueries);
+  // * sorting
+  toursQuery.sort(
+    sort && typeof sort == 'string' ? sort.replaceAll(',', ' ') : 'createdAt',
+  );
+  // * selecting
+  toursQuery.select(
+    select && typeof select == 'string' ? select.replaceAll(',', ' ') : '-__v',
+  );
+  // * getting data
+  const tours = await toursQuery;
   res
     .status(200)
     .json({ status: 'success', result: tours.length, data: tours });
@@ -17,7 +27,7 @@ const getById = async (req: Request, res: Response) => {
 };
 
 const saveTour = async (
-  req: Request<core.ParamsDictionary, any, TTour>,
+  req: Request<ParamsDictionary, any, TTour>,
   res: Response,
 ) => {
   try {
