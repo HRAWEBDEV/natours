@@ -3,7 +3,8 @@ import * as core from 'express-serve-static-core';
 import { Tour, type TTour } from '../models/tourModel.js';
 
 const getAllTours = async (req: Request, res: Response) => {
-  const tours = await Tour.find();
+  const { page, sort, ...otherQueries } = req.query;
+  const tours = await Tour.find(otherQueries);
   res
     .status(200)
     .json({ status: 'success', result: tours.length, data: tours });
