@@ -1,16 +1,17 @@
 import { Tour } from '../models/tourModel.js';
+import { ApiFeatures } from '../utils/ApiFeatures.js';
 const getAllTours = async (req, res) => {
-    const { page, sort, select, ...otherQueries } = req.query;
-    let toursQuery = Tour.find(otherQueries);
-    // * sorting
-    toursQuery.sort(sort && typeof sort == 'string' ? sort.replaceAll(',', ' ') : 'createdAt');
-    // * selecting
-    toursQuery.select(select && typeof select == 'string' ? select.replaceAll(',', ' ') : '-__v');
-    // * getting data
-    const tours = await toursQuery;
-    res
-        .status(200)
-        .json({ status: 'success', result: tours.length, data: tours });
+    const { page, limit, sort, select, fields, ...otherQueries } = req.query;
+    let features = new ApiFeatures({ limit, sort, page, select, fields, ...otherQueries }, Tour.find(otherQueries));
+    features.sort().select().paginate();
+    const tours = await features.query();
+    res.status(200).json({
+        status: 'success',
+        result: tours.length,
+        page: features.page,
+        limit: features.limit,
+        data: tours,
+    });
 };
 const getById = async (req, res) => {
     const id = req.params.id;
@@ -46,5 +47,64 @@ const updateTour = async (req, res) => {
     }
     catch (err) { }
 };
-export { getAllTours, saveTour, deleteTour, updateTour, getById };
+const getTourStats = async (req, res) => {
+    // * aggregation is a way to manipulate the data in a advanced way
+    const stats = await Tour.aggregate([
+        {
+            $match: { ratingsAverage: { $gte: 4.5 } },
+        },
+        {
+            $group: {
+                // group by id and then calculate required fields
+                _id: '$difficulty',
+                numTours: { $sum: 1 },
+                numRatings: { $sum: '$ratingsQuantity' },
+                avgRating: { $avg: '$ratingsAverage' },
+                avgPrice: { $avg: '$price' },
+                minPrice: { $min: '$price' },
+                maxPrice: { $max: '$price' },
+            },
+        },
+        {
+            $sort: {
+                avgPrice: 1,
+            },
+        },
+        {
+            $match: { _id: { $ne: 'easy' } },
+        },
+    ]);
+    res.json({
+        status: 'success',
+        data: stats,
+    });
+};
+const getTourMonthlyPlan = async (req, res) => {
+    const { year } = req.params;
+    const plan = await Tour.aggregate([
+        {
+            $unwind: '$startDates',
+        },
+        {
+            $match: {
+                startDates: {
+                    $gte: new Date(`${year}-01-01`),
+                    $lte: new Date(`${year}-12-31`),
+                },
+            },
+        },
+        {
+            $group: {
+                _id: { $month: '$startDates' },
+                numTourStarts: { $sum: 1 },
+            },
+        },
+        { $sort: { _id: 1 } },
+    ]);
+    res.status(200).json({
+        status: 'success',
+        data: plan,
+    });
+};
+export { getAllTours, saveTour, deleteTour, updateTour, getById, getTourStats, getTourMonthlyPlan, };
 //# sourceMappingURL=tourController.js.map

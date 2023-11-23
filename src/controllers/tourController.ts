@@ -1,23 +1,24 @@
 import { Request, Response } from 'express';
 import { ParamsDictionary } from 'express-serve-static-core';
 import { Tour, type TTour } from '../models/tourModel.js';
+import { ApiFeatures } from '../utils/ApiFeatures.js';
 
 const getAllTours = async (req: Request, res: Response) => {
-  const { page, sort, select, ...otherQueries } = req.query;
-  let toursQuery = Tour.find(otherQueries);
-  // * sorting
-  toursQuery.sort(
-    sort && typeof sort == 'string' ? sort.replaceAll(',', ' ') : 'createdAt',
+  const { page, limit, sort, select, fields, ...otherQueries } = req.query;
+  let features = new ApiFeatures(
+    { limit, sort, page, select, fields, ...otherQueries },
+    Tour.find(otherQueries),
   );
-  // * selecting
-  toursQuery.select(
-    select && typeof select == 'string' ? select.replaceAll(',', ' ') : '-__v',
-  );
-  // * getting data
-  const tours = await toursQuery;
-  res
-    .status(200)
-    .json({ status: 'success', result: tours.length, data: tours });
+  features.sort().select().paginate();
+  const tours = await features.query();
+
+  res.status(200).json({
+    status: 'success',
+    result: tours.length,
+    page: features.page,
+    limit: features.limit,
+    data: tours,
+  });
 };
 
 const getById = async (req: Request, res: Response) => {
@@ -58,4 +59,73 @@ const updateTour = async (req: Request, res: Response) => {
   } catch (err) {}
 };
 
-export { getAllTours, saveTour, deleteTour, updateTour, getById };
+const getTourStats = async (req: Request, res: Response) => {
+  // * aggregation is a way to manipulate the data in a advanced way
+  const stats = await Tour.aggregate([
+    {
+      $match: { ratingsAverage: { $gte: 4.5 } },
+    },
+    {
+      $group: {
+        // group by id and then calculate required fields
+        _id: '$difficulty',
+        numTours: { $sum: 1 },
+        numRatings: { $sum: '$ratingsQuantity' },
+        avgRating: { $avg: '$ratingsAverage' },
+        avgPrice: { $avg: '$price' },
+        minPrice: { $min: '$price' },
+        maxPrice: { $max: '$price' },
+      },
+    },
+    {
+      $sort: {
+        avgPrice: 1,
+      },
+    },
+    {
+      $match: { _id: { $ne: 'easy' } },
+    },
+  ]);
+  res.json({
+    status: 'success',
+    data: stats,
+  });
+};
+
+const getTourMonthlyPlan = async (req: Request, res: Response) => {
+  const { year } = req.params;
+  const plan = await Tour.aggregate([
+    {
+      $unwind: '$startDates',
+    },
+    {
+      $match: {
+        startDates: {
+          $gte: new Date(`${year}-01-01`),
+          $lte: new Date(`${year}-12-31`),
+        },
+      },
+    },
+    {
+      $group: {
+        _id: { $month: '$startDates' },
+        numTourStarts: { $sum: 1 },
+      },
+    },
+    { $sort: { _id: 1 } },
+  ]);
+  res.status(200).json({
+    status: 'success',
+    data: plan,
+  });
+};
+
+export {
+  getAllTours,
+  saveTour,
+  deleteTour,
+  updateTour,
+  getById,
+  getTourStats,
+  getTourMonthlyPlan,
+};
