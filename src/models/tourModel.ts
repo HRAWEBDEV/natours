@@ -1,4 +1,5 @@
 import { Schema, model, InferSchemaType, Types } from 'mongoose';
+import slugify from 'slugify';
 
 const tourSchema = new Schema(
   {
@@ -112,6 +113,17 @@ const tourSchema = new Schema(
     toJSON: { virtuals: true },
   },
 );
+
+// * run before save and create middleware
+tourSchema.pre('save', function (next) {
+  this.slug = slugify.default(this.name, { lower: true });
+  next();
+});
+
+// * save middleware
+tourSchema.post('save', function (doc, next) {
+  next();
+});
 
 type TTour = InferSchemaType<typeof tourSchema>;
 const Tour = model('Tour', tourSchema);

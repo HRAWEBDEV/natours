@@ -1,4 +1,5 @@
 import { Schema, model } from 'mongoose';
+import slugify from 'slugify';
 const tourSchema = new Schema({
     name: {
         type: String,
@@ -107,6 +108,15 @@ const tourSchema = new Schema({
     },
     toObject: { virtuals: true },
     toJSON: { virtuals: true },
+});
+// * run before save and create middleware
+tourSchema.pre('save', function (next) {
+    this.slug = slugify.default(this.name, { lower: true });
+    next();
+});
+// * save middleware
+tourSchema.post('save', function (doc, next) {
+    next();
 });
 const Tour = model('Tour', tourSchema);
 export { Tour };
