@@ -97,6 +97,16 @@ const tourSchema = new Schema({
         },
     ],
     guides: [{ type: Schema.ObjectId, ref: 'User' }],
+}, {
+    virtuals: {
+        durationWeeks: {
+            get() {
+                return Math.floor(this.duration / 7);
+            },
+        },
+    },
+    toObject: { virtuals: true },
+    toJSON: { virtuals: true },
 });
 const Tour = model('Tour', tourSchema);
 export { Tour };
