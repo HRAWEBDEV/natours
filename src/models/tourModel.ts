@@ -1,5 +1,6 @@
 import { Schema, model, InferSchemaType, Query } from 'mongoose';
 import slugify from 'slugify';
+import validator from 'validator';
 
 const tourSchema = new Schema(
   {
@@ -10,6 +11,7 @@ const tourSchema = new Schema(
       trim: true,
       maxLength: [40, 'A tour name must have less or equal than 40 characters'],
       minLength: [10, 'A tour name must have more or equal than 10 characters'],
+      validate: validator.default.isAlpha,
     },
     slug: String,
     duration: {
