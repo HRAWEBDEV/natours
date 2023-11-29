@@ -109,6 +109,7 @@ const tourSchema = new Schema({
     toObject: { virtuals: true },
     toJSON: { virtuals: true },
 });
+// * actually we can have multiple middlwares (like express middlewares)
 // * run before save and create middleware
 tourSchema.pre('save', function (next) {
     this.slug = slugify.default(this.name, { lower: true });
@@ -116,6 +117,22 @@ tourSchema.pre('save', function (next) {
 });
 // * save middleware
 tourSchema.post('save', function (doc, next) {
+    next();
+});
+// * query middleware (in this middleware we have access to query (this is query))
+tourSchema.pre(/^find/, function (next) {
+    this.where('secretTour').equals(false);
+    next();
+});
+// * aggregation middleware
+tourSchema.pre('aggregate', function (next) {
+    this.pipeline().unshift({
+        $match: {
+            secretTour: {
+                $ne: true,
+            },
+        },
+    });
     next();
 });
 const Tour = model('Tour', tourSchema);

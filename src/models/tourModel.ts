@@ -1,4 +1,4 @@
-import { Schema, model, InferSchemaType, Types } from 'mongoose';
+import { Schema, model, InferSchemaType, Query } from 'mongoose';
 import slugify from 'slugify';
 
 const tourSchema = new Schema(
@@ -114,6 +114,7 @@ const tourSchema = new Schema(
   },
 );
 
+// * actually we can have multiple middlwares (like express middlewares)
 // * run before save and create middleware
 tourSchema.pre('save', function (next) {
   this.slug = slugify.default(this.name, { lower: true });
@@ -122,6 +123,26 @@ tourSchema.pre('save', function (next) {
 
 // * save middleware
 tourSchema.post('save', function (doc, next) {
+  next();
+});
+
+// * query middleware (in this middleware we have access to query (this is query))
+tourSchema.pre(
+  /^find/,
+  function (this: Query<any, any, {}, any, 'find'>, next) {
+    this.where('secretTour').equals(false);
+    next();
+  },
+);
+// * aggregation middleware
+tourSchema.pre('aggregate', function (next) {
+  this.pipeline().unshift({
+    $match: {
+      secretTour: {
+        $ne: true,
+      },
+    },
+  });
   next();
 });
 
