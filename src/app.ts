@@ -4,6 +4,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { connectDb } from './db/connect.js';
 import { router as tourRouter } from './routes/tourRoute.js';
+import { router as userRouter } from './routes/userRoute.js';
 import { replaceQueryOperator } from './middlewares/replaceQueryOperators.js';
 import { notFound } from './middlewares/notFound.js';
 import { globalErrorHandler } from './middlewares/globalErrorHandler.js';
@@ -27,7 +28,9 @@ app.use(express.static('public'));
 app.use(replaceQueryOperator);
 // * routes
 const apiBaseRoute = '/api/v1';
+// * tours route
 app.use(`${apiBaseRoute}/tour`, tourRouter);
+app.use(`${apiBaseRoute}/user`, userRouter);
 
 // * attach not found
 app.all('*', notFound);
