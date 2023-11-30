@@ -7,25 +7,10 @@ import { router as tourRouter } from './routes/tourRoute.js';
 import { replaceQueryOperator } from './middlewares/replaceQueryOperators.js';
 import { notFound } from './middlewares/notFound.js';
 import { globalErrorHandler } from './middlewares/globalErrorHandler.js';
-// * handle on handled rejections
-// TODO => it is better to restart the server after that
-process.on('unhandledRejection', (err) => {
-    console.log('UNHANDLED REJECTION');
-    console.log(err.name, err.message);
-    if (server) {
-        server.close(() => process.exit(1));
-        return;
-    }
-    process.exit(1);
-});
 // * add uncaught exception handler
 process.on('uncaughtException', (err) => {
     console.log('UNCAUGHT EXCEPTION');
     console.log(err.name, err.message);
-    if (server) {
-        server.close(() => process.exit(1));
-        return;
-    }
     process.exit(1);
 });
 dotenv.config();
@@ -57,4 +42,15 @@ const startServer = async () => {
     }
 };
 startServer();
+// * handle on handled rejections
+// TODO => it is better to restart the server after that
+process.on('unhandledRejection', (err) => {
+    console.log('UNHANDLED REJECTION');
+    console.log(err.name, err.message);
+    if (server) {
+        server.close(() => process.exit(1));
+        return;
+    }
+    process.exit(1);
+});
 //# sourceMappingURL=app.js.map
