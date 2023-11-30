@@ -23,10 +23,11 @@ app.all('*', notFound);
 // * global error handler
 app.use(globalErrorHandler);
 const serverPort = process.env.PORT;
+let server = null;
 const startServer = async () => {
     try {
         await connectDb();
-        app.listen(serverPort, () => {
+        server = app.listen(serverPort, () => {
             console.log(`server is listening to port: ${serverPort}`);
         });
     }
@@ -35,4 +36,15 @@ const startServer = async () => {
     }
 };
 startServer();
+// * handle on handled rejections
+// TODO => it is better to restart the server after that
+process.on('unhandledRejection', (err) => {
+    console.log(err);
+    console.log('UNHANDLED REJECTION');
+    if (server) {
+        server.close(() => process.exit(1));
+        return;
+    }
+    process.exit(1);
+});
 //# sourceMappingURL=app.js.map

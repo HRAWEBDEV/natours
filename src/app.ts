@@ -7,6 +7,7 @@ import { router as tourRouter } from './routes/tourRoute.js';
 import { replaceQueryOperator } from './middlewares/replaceQueryOperators.js';
 import { notFound } from './middlewares/notFound.js';
 import { globalErrorHandler } from './middlewares/globalErrorHandler.js';
+import { IncomingMessage, Server, ServerResponse } from 'http';
 
 dotenv.config();
 const app = express();
@@ -28,10 +29,11 @@ app.all('*', notFound);
 app.use(globalErrorHandler);
 
 const serverPort = process.env.PORT;
+let server: Server<typeof IncomingMessage, typeof ServerResponse> | null = null;
 const startServer = async () => {
   try {
     await connectDb();
-    app.listen(serverPort, () => {
+    server = app.listen(serverPort, () => {
       console.log(`server is listening to port: ${serverPort}`);
     });
   } catch (err) {
@@ -40,3 +42,15 @@ const startServer = async () => {
 };
 
 startServer();
+
+// * handle on handled rejections
+// TODO => it is better to restart the server after that
+process.on('unhandledRejection', (err) => {
+  console.log(err);
+  console.log('UNHANDLED REJECTION');
+  if (server) {
+    server.close(() => process.exit(1));
+    return;
+  }
+  process.exit(1);
+});
