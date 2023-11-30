@@ -1,12 +1,13 @@
 import { Tour } from '../models/tourModel.js';
 import { ApiFeatures } from '../utils/ApiFeatures.js';
 import { AppError } from '../utils/AppError.js';
+import { StatusCodes } from 'http-status-codes';
 const getAllTours = async (req, res) => {
     const { page, limit, sort, select, fields, ...otherQueries } = req.query;
     let features = new ApiFeatures({ limit, sort, page, select, fields, ...otherQueries }, Tour.find(otherQueries));
     features.sort().select().paginate();
     const tours = await features.query();
-    res.status(200).json({
+    res.status(StatusCodes.OK).json({
         status: 'success',
         result: tours.length,
         page: features.page,
@@ -19,18 +20,18 @@ const getById = async (req, res) => {
     const tour = await Tour.findById(id);
     if (!tour)
         throw new AppError('no tour found with that id', 404);
-    res.status(200).json({ status: 'success', data: tour });
+    res.status(StatusCodes.OK).json({ status: 'success', data: tour });
 };
 const saveTour = async (req, res) => {
     const tour = await Tour.create({ ...req.body, date: new Date() });
-    res.status(200).json({ status: 'success', data: tour });
+    res.status(StatusCodes.CREATED).json({ status: 'success', data: tour });
 };
 const deleteTour = async (req, res) => {
     const id = req.params.id;
     const tour = await Tour.findByIdAndDelete(id);
     if (!tour)
         throw new AppError('no tour found with that id', 404);
-    res.status(200).json({ status: 'success', data: tour });
+    res.status(StatusCodes.OK).json({ status: 'success', data: tour });
 };
 const updateTour = async (req, res) => {
     const id = req.params.id;
@@ -41,7 +42,7 @@ const updateTour = async (req, res) => {
     });
     if (!tour)
         throw new AppError('no tour found with that id', 404);
-    res.status(301).json({ status: 'success', data: tour });
+    res.status(StatusCodes.CREATED).json({ status: 'success', data: tour });
 };
 const getTourStats = async (req, res) => {
     // * aggregation is a way to manipulate the data in a advanced way
@@ -101,7 +102,7 @@ const getTourMonthlyPlan = async (req, res) => {
         { $project: { _id: 0 } },
         { $sort: { month: 1 } },
     ]);
-    res.status(200).json({
+    res.status(StatusCodes.OK).json({
         status: 'success',
         data: plan,
     });

@@ -1,4 +1,5 @@
 import { checkOperationalErrors } from '../utils/checkOperationalErrors.js';
+import { StatusCodes } from 'http-status-codes';
 const globalErrorHandler = async (err, req, res, next) => {
     // * development errors
     if (process.env.MODE == 'development') {
@@ -19,7 +20,7 @@ const globalErrorHandler = async (err, req, res, next) => {
     const { message, statusCode, status } = newError;
     if (!newError.operational) {
         console.error('error', newError);
-        res.status(500).json({
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             status: 'error',
             message: 'something went wrong',
         });
