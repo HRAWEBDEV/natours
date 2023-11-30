@@ -24,7 +24,20 @@ const userSchema = new Schema({
   passwordConfrim: {
     type: String,
     required: [true, 'please confirm your password'],
+    // * only works for save and create (not on save)
+    validate: {
+      validator(this: any, value: string) {
+        return value == this.password;
+      },
+      message: 'confirm password is wrong',
+    },
   },
+});
+
+userSchema.pre('save', function (next) {
+  if (this.isModified('password')) {
+  }
+  next();
 });
 
 type TUser = InferSchemaType<typeof userSchema>;
