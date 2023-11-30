@@ -1,6 +1,7 @@
 import { RequestHandler } from 'express';
 import { Tour } from '../models/tourModel.js';
 import { ApiFeatures } from '../utils/ApiFeatures.js';
+import { AppError } from '../utils/AppError.js';
 
 const getAllTours: RequestHandler = async (req, res) => {
   const { page, limit, sort, select, fields, ...otherQueries } = req.query;
@@ -23,6 +24,7 @@ const getAllTours: RequestHandler = async (req, res) => {
 const getById: RequestHandler = async (req, res) => {
   const id = req.params.id;
   const tour = await Tour.findById(id);
+  if (!tour) throw new AppError('no tour found with that id', 404);
   res.status(200).json({ status: 'success', data: tour });
 };
 
@@ -34,6 +36,7 @@ const saveTour: RequestHandler = async (req, res) => {
 const deleteTour: RequestHandler = async (req, res) => {
   const id = req.params.id;
   const tour = await Tour.findByIdAndDelete(id);
+  if (!tour) throw new AppError('no tour found with that id', 404);
   res.status(200).json({ status: 'success', data: tour });
 };
 
@@ -44,6 +47,7 @@ const updateTour: RequestHandler = async (req, res) => {
     new: true,
     runValidators: true,
   });
+  if (!tour) throw new AppError('no tour found with that id', 404);
   res.status(301).json({ status: 'success', data: tour });
 };
 
