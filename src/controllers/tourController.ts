@@ -1,9 +1,8 @@
-import { Request, Response } from 'express';
-import { ParamsDictionary } from 'express-serve-static-core';
-import { Tour, type TTour } from '../models/tourModel.js';
+import { RequestHandler } from 'express';
+import { Tour } from '../models/tourModel.js';
 import { ApiFeatures } from '../utils/ApiFeatures.js';
 
-const getAllTours = async (req: Request, res: Response) => {
+const getAllTours: RequestHandler = async (req, res) => {
   const { page, limit, sort, select, fields, ...otherQueries } = req.query;
   let features = new ApiFeatures(
     { limit, sort, page, select, fields, ...otherQueries },
@@ -21,16 +20,13 @@ const getAllTours = async (req: Request, res: Response) => {
   });
 };
 
-const getById = async (req: Request, res: Response) => {
+const getById: RequestHandler = async (req, res) => {
   const id = req.params.id;
   const tour = await Tour.findById(id);
   res.status(200).json({ status: 'success', data: tour });
 };
 
-const saveTour = async (
-  req: Request<ParamsDictionary, any, TTour>,
-  res: Response,
-) => {
+const saveTour: RequestHandler = async (req, res) => {
   try {
     const tour = await Tour.create({ ...req.body, date: new Date() });
     res.status(200).json({ status: 'success', data: tour });
@@ -39,7 +35,7 @@ const saveTour = async (
   }
 };
 
-const deleteTour = async (req: Request, res: Response) => {
+const deleteTour: RequestHandler = async (req, res) => {
   const id = req.params.id;
   try {
     const tour = await Tour.findByIdAndDelete(id);
@@ -47,7 +43,7 @@ const deleteTour = async (req: Request, res: Response) => {
   } catch (err) {}
 };
 
-const updateTour = async (req: Request, res: Response) => {
+const updateTour: RequestHandler = async (req, res) => {
   const id = req.params.id;
   const newTour = req.body;
   try {
@@ -59,7 +55,7 @@ const updateTour = async (req: Request, res: Response) => {
   } catch (err) {}
 };
 
-const getTourStats = async (req: Request, res: Response) => {
+const getTourStats: RequestHandler = async (req, res) => {
   // * aggregation is a way to manipulate the data in a advanced way
   const stats = await Tour.aggregate([
     {
@@ -92,7 +88,7 @@ const getTourStats = async (req: Request, res: Response) => {
   });
 };
 
-const getTourMonthlyPlan = async (req: Request, res: Response) => {
+const getTourMonthlyPlan: RequestHandler = async (req, res) => {
   const { year } = req.params;
   // * powerful stuff
   const plan = await Tour.aggregate([

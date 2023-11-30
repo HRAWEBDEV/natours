@@ -5,6 +5,7 @@ import { connectDb } from './db/connect.js';
 import { router as tourRouter } from './routes/tourRoute.js';
 import { replaceQueryOperator } from './middlewares/replaceQueryOperators.js';
 import { notFound } from './middlewares/notFound.js';
+import { globalErrorHandler } from './middlewares/globalErrorHandler.js';
 
 dotenv.config();
 const app = express();
@@ -21,6 +22,9 @@ app.use(`${apiBaseRoute}/tour`, tourRouter);
 
 // * attach not found
 app.all('*', notFound);
+
+// * global error handler
+app.use(globalErrorHandler);
 
 const serverPort = process.env.PORT;
 const startServer = async () => {
