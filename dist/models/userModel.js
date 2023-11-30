@@ -20,6 +20,7 @@ const userSchema = new Schema({
         type: String,
         required: [true, 'please provide a password'],
         minLength: [8, 'a password must be at least eight characters'],
+        select: false,
     },
     passwordConfrim: {
         type: String,
@@ -30,6 +31,12 @@ const userSchema = new Schema({
                 return value == this.password;
             },
             message: 'confirm password is wrong',
+        },
+    },
+}, {
+    methods: {
+        async correctPassword(candidatePassword, userPassword) {
+            return await bycrypt.compare(candidatePassword, userPassword);
         },
     },
 });
