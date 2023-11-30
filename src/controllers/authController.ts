@@ -4,18 +4,17 @@ import jwt from 'jsonwebtoken';
 import { StatusCodes } from 'http-status-codes';
 import { AppError } from '../utils/AppError.js';
 
-const verifyToken = (
-  token: string,
-): Promise<string | undefined | jwt.VerifyErrors> => {
-  return new Promise((reject, resolve) => {
+const verifyToken = (token: string): Promise<any> => {
+  return new Promise((resolve, reject) => {
     jwt.verify(token!, process.env.JWT_SECRET!, (err, decoded) => {
-      if (err) return reject(err);
-      resolve(decoded);
+      if (err) {
+        reject(err);
+      } else resolve(decoded);
     });
   });
 };
 
-const signToken = (id: string): Promise<string | undefined | Error> => {
+const signToken = (id: string): Promise<any> => {
   return new Promise((resovle, reject) => {
     jwt.sign(
       { id },
@@ -42,10 +41,13 @@ const wrongPassAndEmailAuthorize = () => {
 const protect: RequestHandler = async (req, res, next) => {
   const { authorization } = req.headers;
   if (!authorization || !authorization.startsWith('Bearer')) unAuthorizedUser();
-  const token = authorization?.split(' ')[1];
+  const token = authorization?.split(' ')[2];
   if (!token) unAuthorizedUser();
   // * verify token
   const decoded = await verifyToken(token!);
+  const user = await User.findById(decoded.id);
+  if (!user) unAuthorizedUser();
+  if (user?.changedPasswordAfter(decoded.iat)) unAuthorizedUser();
   next();
 };
 

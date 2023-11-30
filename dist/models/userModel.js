@@ -33,10 +33,21 @@ const userSchema = new Schema({
             message: 'confirm password is wrong',
         },
     },
+    changedUserAt: {
+        type: Date,
+        default: Date.now(),
+    },
 }, {
     methods: {
         async correctPassword(candidatePassword, userPassword) {
             return await bycrypt.compare(candidatePassword, userPassword);
+        },
+        changedPasswordAfter(jwtIAT) {
+            if (this.changedUserAt) {
+                const changedUserTimestamp = this.changedUserAt.getTime() / 1000;
+                return jwtIAT < changedUserTimestamp;
+            }
+            return false;
         },
     },
 });
