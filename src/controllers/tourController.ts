@@ -27,32 +27,24 @@ const getById: RequestHandler = async (req, res) => {
 };
 
 const saveTour: RequestHandler = async (req, res) => {
-  try {
-    const tour = await Tour.create({ ...req.body, date: new Date() });
-    res.status(200).json({ status: 'success', data: tour });
-  } catch (err) {
-    res.status(404).json({ status: 'failed', error: err });
-  }
+  const tour = await Tour.create({ ...req.body, date: new Date() });
+  res.status(200).json({ status: 'success', data: tour });
 };
 
 const deleteTour: RequestHandler = async (req, res) => {
   const id = req.params.id;
-  try {
-    const tour = await Tour.findByIdAndDelete(id);
-    res.status(200).json({ status: 'success', data: tour });
-  } catch (err) {}
+  const tour = await Tour.findByIdAndDelete(id);
+  res.status(200).json({ status: 'success', data: tour });
 };
 
 const updateTour: RequestHandler = async (req, res) => {
   const id = req.params.id;
   const newTour = req.body;
-  try {
-    const tour = await Tour.findByIdAndUpdate(id, newTour, {
-      new: true,
-      runValidators: true,
-    });
-    res.status(301).json({ status: 'success', data: tour });
-  } catch (err) {}
+  const tour = await Tour.findByIdAndUpdate(id, newTour, {
+    new: true,
+    runValidators: true,
+  });
+  res.status(301).json({ status: 'success', data: tour });
 };
 
 const getTourStats: RequestHandler = async (req, res) => {
