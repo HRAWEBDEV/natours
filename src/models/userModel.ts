@@ -1,5 +1,6 @@
 import { Schema, InferSchemaType, model } from 'mongoose';
 import validator from 'validator';
+import bycrypt from 'bcryptjs';
 
 const userSchema = new Schema({
   name: {
@@ -34,8 +35,12 @@ const userSchema = new Schema({
   },
 });
 
-userSchema.pre('save', function (next) {
+userSchema.pre('save', async function (next) {
   if (this.isModified('password')) {
+    //  hash password
+    this.password = await bycrypt.hash(this.password, 12);
+    // @ts-ignore
+    this.passwordConfrim = undefined;
   }
   next();
 });
