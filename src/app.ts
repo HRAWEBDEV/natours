@@ -9,6 +9,29 @@ import { notFound } from './middlewares/notFound.js';
 import { globalErrorHandler } from './middlewares/globalErrorHandler.js';
 import { IncomingMessage, Server, ServerResponse } from 'http';
 
+// * handle on handled rejections
+// TODO => it is better to restart the server after that
+process.on('unhandledRejection', (err: Error) => {
+  console.log('UNHANDLED REJECTION');
+  console.log(err.name, err.message);
+  if (server) {
+    server.close(() => process.exit(1));
+    return;
+  }
+  process.exit(1);
+});
+
+// * add uncaught exception handler
+process.on('uncaughtException', (err: Error) => {
+  console.log('UNCAUGHT EXCEPTION');
+  console.log(err.name, err.message);
+  if (server) {
+    server.close(() => process.exit(1));
+    return;
+  }
+  process.exit(1);
+});
+
 dotenv.config();
 const app = express();
 // add default middlewares
@@ -42,26 +65,3 @@ const startServer = async () => {
 };
 
 startServer();
-
-// * handle on handled rejections
-// TODO => it is better to restart the server after that
-process.on('unhandledRejection', (err: Error) => {
-  console.log('UNHANDLED REJECTION');
-  console.log(err.name, err.message);
-  if (server) {
-    server.close(() => process.exit(1));
-    return;
-  }
-  process.exit(1);
-});
-
-// * add uncaught exception handler
-process.on('uncaughtException', (err: Error) => {
-  console.log('UNCAUGHT EXCEPTION');
-  console.log(err.name, err.message);
-  if (server) {
-    server.close(() => process.exit(1));
-    return;
-  }
-  process.exit(1);
-});
