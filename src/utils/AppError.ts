@@ -8,6 +8,8 @@ class AppError extends Error {
     super(message);
     this.status = String(statusCode).startsWith('4') ? 'fail' : 'error';
     this.operational = true;
+
+    Error.captureStackTrace(this, this.constructor);
   }
 }
 
