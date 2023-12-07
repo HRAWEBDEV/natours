@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { StatusCodes } from 'http-status-codes';
 import { AppError } from '../utils/AppError.js';
 import { sendEmail } from '../utils/email.js';
+import { createHash } from 'crypto';
 
 declare module 'express-serve-static-core' {
   interface Request {
@@ -118,17 +119,40 @@ const forgetPassword: RequestHandler = async (req, res) => {
   )}/api/v1/user/reset-password/${resetToken}`;
 
   const message = `forget your password? Submit a patch request with your new password and confirm password to: ${resetUrl}.\n if you did not forget your password ignore this email`;
-
-  await sendEmail({
-    to: email,
-    subject: 'your password reset token (valid for 10 min)',
-    text: message,
-  });
-  res.status(200).json({ status: 'success', message: 'token sent to email!' });
+  try {
+    await sendEmail({
+      to: email,
+      subject: 'your password reset token (valid for 10 min)',
+      text: message,
+    });
+    res
+      .status(200)
+      .json({ status: 'success', message: 'token sent to email!' });
+  } catch (err) {
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+    throw new AppError(
+      'there was an error sending the email, try again later',
+      500,
+    );
+  }
 };
 
 const resetPassword: RequestHandler = async (req, res) => {
   const { resetToken } = req.body;
+  const hashResetToken = createHash('sha256').update(resetToken).digest('hex');
+  const user = await User.findOne({
+    passwordResetToken: hashResetToken,
+    passwordResetExpires: {
+      $gte: Date.now(),
+    },
+  });
+  if (!user) {
+    throw new AppError('token is invalid or expired', 400);
+  }
+  const jwtToken = signToken(user._id.toString());
+  res.status(200).json({ status: 'success', data: { token: jwtToken } });
 };
 
 export {

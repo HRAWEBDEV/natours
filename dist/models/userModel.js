@@ -1,7 +1,7 @@
 import { Schema, model } from 'mongoose';
 import validator from 'validator';
 import bycrypt from 'bcryptjs';
-import crypto from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 const userSchema = new Schema({
     name: {
         type: String,
@@ -43,8 +43,14 @@ const userSchema = new Schema({
         type: Date,
         default: Date.now(),
     },
-    passwordResetToken: String,
-    passwordResetExpires: Date,
+    passwordResetToken: {
+        type: String,
+        select: false,
+    },
+    passwordResetExpires: {
+        type: Date,
+        select: false,
+    },
 }, {
     methods: {
         async correctPassword(candidatePassword, userPassword) {
@@ -58,9 +64,8 @@ const userSchema = new Schema({
             return false;
         },
         createPasswordResetToken() {
-            const resetToken = crypto.randomBytes(32).toString('hex');
-            this.passwordResetToken = crypto
-                .createHash('sha256')
+            const resetToken = randomBytes(32).toString('hex');
+            this.passwordResetToken = createHash('sha256')
                 .update(resetToken)
                 .digest('hex');
             this.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000);
