@@ -3,6 +3,7 @@ import { RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
 import { StatusCodes } from 'http-status-codes';
 import { AppError } from '../utils/AppError.js';
+import { sendEmail } from '../utils/email.js';
 
 declare module 'express-serve-static-core' {
   interface Request {
@@ -111,10 +112,24 @@ const forgetPassword: RequestHandler = async (req, res) => {
   }
   const resetToken = user.createPasswordResetToken();
   await user.save({ validateBeforeSave: false });
-  res.status(200).json({ resetToken });
+
+  const resetUrl = `${req.protocol}://${req.get(
+    'host',
+  )}/api/v1/user/reset-password/${resetToken}`;
+
+  const message = `forget your password? Submit a patch request with your new password and confirm password to: ${resetUrl}.\n if you did not forget your password ignore this email`;
+
+  await sendEmail({
+    to: email,
+    subject: 'your password reset token (valid for 10 min)',
+    text: message,
+  });
+  res.status(200).json({ status: 'success', message: 'token sent to email!' });
 };
 
-const resetPassword = async () => {};
+const resetPassword: RequestHandler = async (req, res) => {
+  const { resetToken } = req.body;
+};
 
 export {
   signup,

@@ -10,8 +10,8 @@ import { getAllUsers } from '../controllers/userController.js';
 const router = Router();
 router.route('/signup').post(signup);
 router.route('/login').post(login);
-router.route('/reset-password').post(resetPassword);
 router.route('/forget-password').post(forgetPassword);
+router.route('/reset-password/:resetToken').patch(resetPassword);
 router.route('/').get(getAllUsers);
 
 export { router };
