@@ -1,12 +1,18 @@
 import { Schema, InferSchemaType, model } from 'mongoose';
 import validator from 'validator';
 import bycrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 const userSchema = new Schema(
   {
     name: {
       type: String,
       required: [true, 'please insert your name'],
+    },
+    role: {
+      type: String,
+      enum: ['admin', 'user', 'lead-guide'],
+      default: 'user',
     },
     email: {
       type: String,
@@ -39,11 +45,13 @@ const userSchema = new Schema(
       type: Date,
       default: Date.now(),
     },
+    passwordResetToken: String,
+    passwordResetExpires: Date,
   },
   {
     methods: {
       async correctPassword(candidatePassword: string, userPassword: string) {
-        return await bycrypt.compare(candidatePassword, userPassword);
+        return bycrypt.compare(candidatePassword, userPassword);
       },
       changedPasswordAfter(jwtIAT: number) {
         if (this.changedUserAt) {
@@ -51,6 +59,15 @@ const userSchema = new Schema(
           return jwtIAT < changedUserTimestamp;
         }
         return false;
+      },
+      createPasswordResetToken() {
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        this.passwordResetToken = crypto
+          .createHash('sha256')
+          .update(resetToken)
+          .digest('hex');
+        this.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000);
+        return resetToken;
       },
     },
   },

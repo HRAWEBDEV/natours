@@ -44,12 +44,27 @@ const protect = async (req, res, next) => {
         unAuthorizedUser();
     if (user?.changedPasswordAfter(decoded.iat))
         unAuthorizedUser();
+    req.user = user;
     next();
 };
+const restrictToRole = (roles) => {
+    return async (req, res, next) => {
+        if (!roles.includes(req.user.role)) {
+            throw new AppError('you do not have permission to perform this action', StatusCodes.FORBIDDEN);
+        }
+        next();
+    };
+};
 const signup = async (req, res) => {
-    const { name, password, passwordConfrim, email } = req.body;
-    const newUser = await User.create({ name, password, passwordConfrim, email });
-    const token = signToken(newUser._id.toString());
+    const { name, password, passwordConfrim, email, role } = req.body;
+    const newUser = await User.create({
+        name,
+        password,
+        passwordConfrim,
+        email,
+        role,
+    });
+    const token = await signToken(newUser._id.toString());
     res
         .status(StatusCodes.CREATED)
         .json({ status: 'success', data: { user: newUser }, token });
@@ -70,5 +85,16 @@ const login = async (req, res) => {
     const token = await signToken(user._id.toString());
     res.status(StatusCodes.OK).json({ status: 'success', token });
 };
-export { signup, login, protect };
+const forgetPassword = async (req, res) => {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+        throw new AppError('there is no user with this email', 404);
+    }
+    const resetToken = user.createPasswordResetToken();
+    await user.save({ validateBeforeSave: false });
+    res.status(200).json({ resetToken });
+};
+const resetPassword = async () => { };
+export { signup, login, protect, restrictToRole, resetPassword, forgetPassword, };
 //# sourceMappingURL=authController.js.map
