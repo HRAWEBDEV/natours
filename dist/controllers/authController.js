@@ -116,6 +116,7 @@ const forgetPassword = async (req, res) => {
 };
 const resetPassword = async (req, res) => {
     const { resetToken } = req.body;
+    const { passwordConfirm, password } = req.body;
     const hashResetToken = createHash('sha256').update(resetToken).digest('hex');
     const user = await User.findOne({
         passwordResetToken: hashResetToken,
@@ -126,6 +127,9 @@ const resetPassword = async (req, res) => {
     if (!user) {
         throw new AppError('token is invalid or expired', 400);
     }
+    user.password = password;
+    user.passwordConfrim = passwordConfirm;
+    await user.save();
     const jwtToken = signToken(user._id.toString());
     res.status(200).json({ status: 'success', data: { token: jwtToken } });
 };
