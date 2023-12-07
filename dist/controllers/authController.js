@@ -115,7 +115,7 @@ const forgetPassword = async (req, res) => {
     }
 };
 const resetPassword = async (req, res) => {
-    const { resetToken } = req.body;
+    const { resetToken } = req.params;
     const { passwordConfirm, password } = req.body;
     const hashResetToken = createHash('sha256').update(resetToken).digest('hex');
     const user = await User.findOne({
@@ -129,8 +129,10 @@ const resetPassword = async (req, res) => {
     }
     user.password = password;
     user.passwordConfrim = passwordConfirm;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
     await user.save();
-    const jwtToken = signToken(user._id.toString());
+    const jwtToken = await signToken(user._id.toString());
     res.status(200).json({ status: 'success', data: { token: jwtToken } });
 };
 export { signup, login, protect, restrictToRole, resetPassword, forgetPassword, };
