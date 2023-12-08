@@ -5,10 +5,15 @@ import { StatusCodes } from 'http-status-codes';
 import { AppError } from '../utils/AppError.js';
 import { sendEmail } from '../utils/email.js';
 import { createHash } from 'crypto';
+import { Types } from 'mongoose';
+
+type TRequestUser = Omit<TUser, 'password' | 'confirmPassword'> & {
+  _id: Types.ObjectId;
+};
 
 declare module 'express-serve-static-core' {
   interface Request {
-    user: Omit<TUser, 'password' | 'confirmPassword'>;
+    user: TRequestUser;
   }
 }
 
@@ -161,6 +166,28 @@ const resetPassword: RequestHandler = async (req, res) => {
   res.status(200).json({ status: 'success', data: { token: jwtToken } });
 };
 
+const changePassword: RequestHandler = async (req, res) => {
+  const user = await User.findById(req.user._id).select('+password');
+  if (!user) {
+    throw new AppError('please login first', StatusCodes.UNAUTHORIZED);
+  }
+  const { oldPassword, password, passwordConfirm } = req.body;
+  const isPasswordMatched = await user.correctPassword(
+    oldPassword,
+    user.password,
+  );
+  if (!isPasswordMatched)
+    throw new AppError('old password is not correct', StatusCodes.BAD_REQUEST);
+  user.password = password;
+  user.passwordConfrim = passwordConfirm;
+  res.status(StatusCodes.CREATED).json({
+    status: 'success',
+    data: {
+      user,
+    },
+  });
+};
+
 export {
   signup,
   login,
@@ -168,4 +195,5 @@ export {
   restrictToRole,
   resetPassword,
   forgetPassword,
+  changePassword,
 };
